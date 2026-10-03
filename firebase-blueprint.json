@@ -1,0 +1,216 @@
+{
+  "entities": {
+    "Power": {
+      "title": "Power",
+      "description": "Un super-pouvoir inventé par un joueur.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Le texte décrivant le pouvoir (10 à 200 caractères).",
+          "minLength": 10,
+          "maxLength": 200
+        },
+        "authorUid": {
+          "type": "string",
+          "description": "Identifiant Firebase anonyme de l'auteur.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Pseudo du joueur au moment de la création (2 à 20 caractères).",
+          "minLength": 2,
+          "maxLength": 20
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Horodatage serveur de création."
+        },
+        "consequenceCount": {
+          "type": "integer",
+          "description": "Nombre dénormalisé de conséquences associées (démarre à 0)."
+        },
+        "bestConsequenceId": {
+          "type": "string",
+          "description": "ID de la conséquence ayant reçu le plus de votes (null au départ).",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "bestConsequenceVotes": {
+          "type": "integer",
+          "description": "Nombre de votes de la meilleure conséquence actuelle (démarre à 0)."
+        }
+      },
+      "required": [
+        "text",
+        "authorUid",
+        "authorName",
+        "createdAt",
+        "consequenceCount",
+        "bestConsequenceId",
+        "bestConsequenceVotes"
+      ]
+    },
+    "Consequence": {
+      "title": "Consequence",
+      "description": "Une conséquence associée à un pouvoir formant un duo.",
+      "type": "object",
+      "properties": {
+        "powerId": {
+          "type": "string",
+          "description": "ID du document power parent.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "powerText": {
+          "type": "string",
+          "description": "Texte dénormalisé du pouvoir associé pour affichage sans lecture supplémentaire.",
+          "minLength": 10,
+          "maxLength": 200
+        },
+        "text": {
+          "type": "string",
+          "description": "Le texte décrivant la conséquence (5 à 160 caractères).",
+          "minLength": 5,
+          "maxLength": 160
+        },
+        "authorUid": {
+          "type": "string",
+          "description": "Identifiant Firebase anonyme de l'auteur.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Pseudo du joueur au moment de la création (2 à 20 caractères).",
+          "minLength": 2,
+          "maxLength": 20
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Horodatage serveur de création."
+        },
+        "votes": {
+          "type": "integer",
+          "description": "Nombre de votes pour cette conséquence en tant que meilleure conséquence du pouvoir."
+        },
+        "duoVotes": {
+          "type": "integer",
+          "description": "Nombre de votes pour le duo (pouvoir + conséquence)."
+        }
+      },
+      "required": [
+        "powerId",
+        "powerText",
+        "text",
+        "authorUid",
+        "authorName",
+        "createdAt",
+        "votes",
+        "duoVotes"
+      ]
+    },
+    "ConsequenceVote": {
+      "title": "ConsequenceVote",
+      "description": "Vote unique d'un joueur pour la meilleure conséquence d'un pouvoir (ID = ${uid}_${powerId}).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "UID de l'électeur.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "powerId": {
+          "type": "string",
+          "description": "ID du pouvoir concerné.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "consequenceId": {
+          "type": "string",
+          "description": "ID de la conséquence choisie.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Horodatage serveur du vote."
+        }
+      },
+      "required": [
+        "uid",
+        "powerId",
+        "consequenceId",
+        "createdAt"
+      ]
+    },
+    "DuoVote": {
+      "title": "DuoVote",
+      "description": "Vote unique d'un joueur pour un duo pouvoir+conséquence (ID = ${uid}_${consequenceId}).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "UID de l'électeur.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "powerId": {
+          "type": "string",
+          "description": "ID du pouvoir du duo.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "consequenceId": {
+          "type": "string",
+          "description": "ID de la conséquence du duo.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Horodatage serveur du vote."
+        }
+      },
+      "required": [
+        "uid",
+        "powerId",
+        "consequenceId",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/powers/{powerId}": {
+      "schema": "Power",
+      "description": "Collection principale des pouvoirs créés par les joueurs."
+    },
+    "/consequences/{consequenceId}": {
+      "schema": "Consequence",
+      "description": "Collection principale des conséquences associées aux pouvoirs (et servant au classement des duos via duoVotes)."
+    },
+    "/consequenceVotes/{voteId}": {
+      "schema": "ConsequenceVote",
+      "description": "Registre d'unicité des votes de meilleure conséquence (ID = ${uid}_${powerId})."
+    },
+    "/duoVotes/{voteId}": {
+      "schema": "DuoVote",
+      "description": "Registre d'unicité des votes de meilleur duo (ID = ${uid}_${consequenceId})."
+    }
+  }
+}

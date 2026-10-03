@@ -1,0 +1,6 @@
+{
+  "name": "Pouvoir & Conséquence",
+  "description": "Jeu social d'arcade mystique en temps réel : inventez un super-pouvoir, sabotez celui des autres avec une conséquence absurde, et votez pour les meilleurs duos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

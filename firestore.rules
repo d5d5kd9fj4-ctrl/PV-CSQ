@@ -1,0 +1,244 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Sécurité par défaut : tout est refusé sauf autorisation explicite
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 1. Primitives globales
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 2. Validation stricte des schémas (types, tailles, clés autorisées uniquement)
+    function isValidPower(data) {
+      return data.keys().hasAll([
+          'text',
+          'authorUid',
+          'authorName',
+          'createdAt',
+          'consequenceCount',
+          'bestConsequenceId',
+          'bestConsequenceVotes'
+        ])
+        && data.keys().hasOnly([
+          'text',
+          'authorUid',
+          'authorName',
+          'createdAt',
+          'consequenceCount',
+          'bestConsequenceId',
+          'bestConsequenceVotes'
+        ])
+        && data.text is string && data.text.size() >= 10 && data.text.size() <= 200
+        && data.authorUid is string && isValidId(data.authorUid)
+        && data.authorName is string && data.authorName.size() >= 2 && data.authorName.size() <= 20
+        && data.createdAt is timestamp
+        && data.consequenceCount is int && data.consequenceCount >= 0
+        && (data.bestConsequenceId == null || isValidId(data.bestConsequenceId))
+        && data.bestConsequenceVotes is int && data.bestConsequenceVotes >= 0;
+    }
+
+    function isValidConsequence(data) {
+      return data.keys().hasAll([
+          'powerId',
+          'powerText',
+          'text',
+          'authorUid',
+          'authorName',
+          'createdAt',
+          'votes',
+          'duoVotes'
+        ])
+        && data.keys().hasOnly([
+          'powerId',
+          'powerText',
+          'text',
+          'authorUid',
+          'authorName',
+          'createdAt',
+          'votes',
+          'duoVotes'
+        ])
+        && isValidId(data.powerId)
+        && data.powerText is string && data.powerText.size() >= 10 && data.powerText.size() <= 200
+        && data.text is string && data.text.size() >= 5 && data.text.size() <= 160
+        && isValidId(data.authorUid)
+        && data.authorName is string && data.authorName.size() >= 2 && data.authorName.size() <= 20
+        && data.createdAt is timestamp
+        && data.votes is int && data.votes >= 0
+        && data.duoVotes is int && data.duoVotes >= 0;
+    }
+
+    function isValidConsequenceVote(data) {
+      return data.keys().hasAll(['uid', 'powerId', 'consequenceId', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'powerId', 'consequenceId', 'createdAt'])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && isValidId(data.powerId)
+        && isValidId(data.consequenceId)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidDuoVote(data) {
+      return data.keys().hasAll(['uid', 'powerId', 'consequenceId', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'powerId', 'consequenceId', 'createdAt'])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && isValidId(data.powerId)
+        && isValidId(data.consequenceId)
+        && data.createdAt is timestamp;
+    }
+
+    // 3. Collection : powers
+    match /powers/{powerId} {
+      // Lecture publique
+      allow get: if isValidId(powerId);
+      allow list: if true;
+
+      // Création réservée aux joueurs authentifiés (anonymes inclus)
+      allow create: if isSignedIn()
+        && isValidId(powerId)
+        && isValidPower(incoming())
+        && incoming().authorUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().consequenceCount == 0
+        && incoming().bestConsequenceId == null
+        && incoming().bestConsequenceVotes == 0;
+
+      // Mise à jour : texte et auteur immuables, seuls les compteurs évoluent de +1
+      allow update: if isSignedIn()
+        && isValidId(powerId)
+        && isValidPower(incoming())
+        && incoming().text == existing().text
+        && incoming().authorUid == existing().authorUid
+        && incoming().authorName == existing().authorName
+        && incoming().createdAt == existing().createdAt
+        && (
+          // Action 1 : +1 sur consequenceCount lors de l'ajout d'une conséquence
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['consequenceCount'])
+            && incoming().consequenceCount == existing().consequenceCount + 1
+          )
+          ||
+          // Action 2 : +1 sur bestConsequenceVotes (et mise à jour de bestConsequenceId) dans le même batch qu'un vote
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['bestConsequenceId', 'bestConsequenceVotes'])
+            && incoming().bestConsequenceId != null
+            && incoming().bestConsequenceVotes == existing().bestConsequenceVotes + 1
+            && !exists(/databases/$(database)/documents/consequenceVotes/$(request.auth.uid + '_' + powerId))
+            && getAfter(/databases/$(database)/documents/consequenceVotes/$(request.auth.uid + '_' + powerId)).data.consequenceId == incoming().bestConsequenceId
+            && getAfter(/databases/$(database)/documents/consequences/$(incoming().bestConsequenceId)).data.votes == incoming().bestConsequenceVotes
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    // 4. Collection : consequences
+    match /consequences/{consequenceId} {
+      // Lecture publique
+      allow get: if isValidId(consequenceId);
+      allow list: if true;
+
+      // Création réservée aux joueurs authentifiés, liée à un pouvoir existant dont consequenceCount augmente de +1 dans le même batch
+      allow create: if isSignedIn()
+        && isValidId(consequenceId)
+        && isValidConsequence(incoming())
+        && incoming().authorUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().votes == 0
+        && incoming().duoVotes == 0
+        && exists(/databases/$(database)/documents/powers/$(incoming().powerId))
+        && getAfter(/databases/$(database)/documents/powers/$(incoming().powerId)).data.consequenceCount
+           == get(/databases/$(database)/documents/powers/$(incoming().powerId)).data.consequenceCount + 1;
+
+      // Mise à jour : texte immuable, incrément +1 uniquement si le document de vote est créé dans le même batch
+      allow update: if isSignedIn()
+        && isValidId(consequenceId)
+        && isValidConsequence(incoming())
+        && incoming().powerId == existing().powerId
+        && incoming().powerText == existing().powerText
+        && incoming().text == existing().text
+        && incoming().authorUid == existing().authorUid
+        && incoming().authorName == existing().authorName
+        && incoming().createdAt == existing().createdAt
+        && (
+          // Action 1 : Vote "meilleure conséquence" (+1) avec création simultanée du document consequenceVotes
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['votes'])
+            && incoming().votes == existing().votes + 1
+            && !exists(/databases/$(database)/documents/consequenceVotes/$(request.auth.uid + '_' + existing().powerId))
+            && getAfter(/databases/$(database)/documents/consequenceVotes/$(request.auth.uid + '_' + existing().powerId)).data.consequenceId == consequenceId
+          )
+          ||
+          // Action 2 : Vote "meilleur duo" (+1) avec création simultanée du document duoVotes
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['duoVotes'])
+            && incoming().duoVotes == existing().duoVotes + 1
+            && !exists(/databases/$(database)/documents/duoVotes/$(request.auth.uid + '_' + consequenceId))
+            && existsAfter(/databases/$(database)/documents/duoVotes/$(request.auth.uid + '_' + consequenceId))
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    // 5. Collection : consequenceVotes (ID = ${uid}_${powerId})
+    match /consequenceVotes/{voteId} {
+      allow get: if isSignedIn()
+        && isValidId(voteId)
+        && (
+          (resource == null && voteId.matches('^' + request.auth.uid + '_[a-zA-Z0-9_\\-]+$'))
+          || (resource != null && existing().uid == request.auth.uid)
+        );
+      allow list: if isSignedIn() && existing().uid == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && isValidId(voteId)
+        && isValidConsequenceVote(incoming())
+        && voteId == request.auth.uid + '_' + incoming().powerId
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/powers/$(incoming().powerId))
+        && exists(/databases/$(database)/documents/consequences/$(incoming().consequenceId))
+        && getAfter(/databases/$(database)/documents/consequences/$(incoming().consequenceId)).data.votes
+           == get(/databases/$(database)/documents/consequences/$(incoming().consequenceId)).data.votes + 1;
+
+      allow update, delete: if false;
+    }
+
+    // 6. Collection : duoVotes (ID = ${uid}_${consequenceId})
+    match /duoVotes/{voteId} {
+      allow get: if isSignedIn()
+        && isValidId(voteId)
+        && (
+          (resource == null && voteId.matches('^' + request.auth.uid + '_[a-zA-Z0-9_\\-]+$'))
+          || (resource != null && existing().uid == request.auth.uid)
+        );
+      allow list: if isSignedIn() && existing().uid == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && isValidId(voteId)
+        && isValidDuoVote(incoming())
+        && voteId == request.auth.uid + '_' + incoming().consequenceId
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/powers/$(incoming().powerId))
+        && exists(/databases/$(database)/documents/consequences/$(incoming().consequenceId))
+        && getAfter(/databases/$(database)/documents/consequences/$(incoming().consequenceId)).data.duoVotes
+           == get(/databases/$(database)/documents/consequences/$(incoming().consequenceId)).data.duoVotes + 1;
+
+      allow update, delete: if false;
+    }
+  }
+}

@@ -1,0 +1,215 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-ink: #0B0B14;
+    --surface-primary: #14142A;
+    --surface-elevated: #1C1C3A;
+    --text-primary: #F4F2FF;
+    --text-muted: #A6A1C8;
+    --accent-violet: #7C5CFF;
+    --accent-amber: #FFB020;
+    --accent-coral: #FF4D6D;
+    --accent-emerald: #3DDC97;
+  }
+
+  html {
+    background-color: #0B0B14;
+    color: #F4F2FF;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: 0.01em;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #0B0B14;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(124, 92, 255, 0.14) 0%, transparent 42%),
+      radial-gradient(circle at 85% 18%, rgba(255, 77, 109, 0.11) 0%, transparent 38%),
+      radial-gradient(circle at 50% 92%, rgba(255, 176, 32, 0.07) 0%, transparent 45%);
+    background-attachment: fixed;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Bricolage Grotesque', 'DM Sans', sans-serif;
+    text-wrap: balance;
+  }
+
+  .font-mono-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Thème Arcade Mystique — Composants et surfaces statiques */
+.arcade-surface {
+  background-color: rgba(20, 20, 42, 0.88);
+  border: 1px solid rgba(244, 242, 255, 0.09);
+  border-radius: 22px;
+  box-shadow: 0 14px 36px -12px rgba(5, 5, 12, 0.75);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arcade-surface:hover {
+  border-color: rgba(124, 92, 255, 0.32);
+  box-shadow: 0 18px 42px -12px rgba(124, 92, 255, 0.18);
+}
+
+/* Carte « Pouvoir » : Accent Violet Électrique (#7C5CFF) */
+.card-power {
+  background: linear-gradient(155deg, rgba(28, 28, 58, 0.95) 0%, rgba(20, 20, 42, 0.96) 100%);
+  border: 1px solid rgba(124, 92, 255, 0.38);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -10px rgba(124, 92, 255, 0.22),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-power:hover {
+  transform: translateY(-2px);
+  border-color: rgba(124, 92, 255, 0.65);
+  box-shadow: 0 14px 34px -8px rgba(124, 92, 255, 0.34),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Carte « Conséquence » : Accent Corail Chaos (#FF4D6D) */
+.card-consequence {
+  background: linear-gradient(155deg, rgba(34, 20, 38, 0.95) 0%, rgba(20, 20, 42, 0.96) 100%);
+  border: 1px solid rgba(255, 77, 109, 0.38);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -10px rgba(255, 77, 109, 0.22),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-consequence:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 77, 109, 0.65);
+  box-shadow: 0 14px 34px -8px rgba(255, 77, 109, 0.34),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Dégradés identitaires Violet -> Corail */
+.text-gradient-mystic {
+  background: linear-gradient(135deg, #F4F2FF 0%, #B8A5FF 42%, #FF4D6D 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-mystic-primary {
+  background: linear-gradient(135deg, #7C5CFF 0%, #B84DFF 50%, #FF4D6D 100%);
+  color: #F4F2FF;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px -6px rgba(124, 92, 255, 0.5),
+              0 4px 12px -4px rgba(255, 77, 109, 0.35);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 180ms ease;
+}
+
+.btn-mystic-primary:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 12px 28px -6px rgba(124, 92, 255, 0.65),
+              0 6px 16px -4px rgba(255, 77, 109, 0.45);
+}
+
+.btn-mystic-primary:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn-mystic-secondary {
+  background-color: #1C1C3A;
+  color: #F4F2FF;
+  border: 1px solid rgba(124, 92, 255, 0.3);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 180ms ease,
+              background-color 180ms ease;
+}
+
+.btn-mystic-secondary:hover:not(:disabled) {
+  background-color: rgba(124, 92, 255, 0.16);
+  border-color: rgba(124, 92, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-mystic-secondary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Rebond ludique pour les boutons de vote et d'action */
+.btn-vote-bounce {
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 180ms ease;
+}
+
+.btn-vote-bounce:hover:not(:disabled) {
+  transform: scale(1.04);
+}
+
+.btn-vote-bounce:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+/* Animations d'apparition en fondu + léger glissement */
+@keyframes arcadeFadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes arcadeFloatSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-arcade-enter {
+  animation: arcadeFadeSlideUp 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-arcade-float {
+  animation: arcadeFloatSlow 4s ease-in-out infinite;
+}
+
+/* Respect strict de prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-arcade-enter,
+  .animate-arcade-float {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .card-power:hover,
+  .card-consequence:hover,
+  .btn-mystic-primary:hover:not(:disabled),
+  .btn-mystic-secondary:hover:not(:disabled),
+  .btn-vote-bounce:hover:not(:disabled) {
+    transform: none !important;
+  }
+}

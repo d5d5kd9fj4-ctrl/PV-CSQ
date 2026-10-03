@@ -1,0 +1,27 @@
+# Dépendances
+node_modules/
+
+# Fichiers de build statique
+dist/
+build/
+coverage/
+
+# Fichiers d'environnement et secrets locaux (ne jamais versionner)
+.env
+.env.*
+!.env.example
+
+# Fichiers système et éditeurs
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.idea/
+.vscode/
+
+# Note : firebase-applet-config.json et src/lib/firebase.ts contiennent
+# uniquement les identifiants publics Firebase nécessaires au build GitHub Pages
+# et DOIVENT rester versionnés.
+!firebase-applet-config.json
